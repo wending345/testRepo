@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tongji.enso.mybatisdemo.mapper.online.Enso_forecastMapper">
+
+    <select id="findAllByYearAndMonth" resultType="Enso_forecast">
+        select * from enso_forecast where year= #{year} and month= #{month}
+    </select>
+
+    <select id="findAllByModel" resultType="Enso_forecast">
+        select * from enso_forecast where model= #{model}
+    </select>
+
+</mapper>
