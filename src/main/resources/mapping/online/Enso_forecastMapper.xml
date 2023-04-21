@@ -11,4 +11,12 @@
         select * from enso_forecast where model= #{model}
     </select>
 
+    <select id="findAllAfterYearAndMonth" resultType="Enso_forecast">
+        select * from enso_forecast where (month>=#{month} and year= #{year}) or year> #{year} order by year,month,model
+    </select>
+
+    <select id="findDisYM" resultType="YM">
+        select distinct year, month from enso_forecast where (month>=#{month} and year= #{year}) or year> #{year} order by year,month
+    </select>
+
 </mapper>

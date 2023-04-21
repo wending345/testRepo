@@ -7,7 +7,7 @@
         select * from observation where year= #{year} and month= #{month}
     </select>
 
-    <select id="findAll" resultType="Observation">
-        select * from observation
+    <select id="findAllAfterYearAndMonth" resultType="Observation">
+        select * from observation where (month>#{month} and year= #{year}) or year> #{year}
     </select>
 </mapper>

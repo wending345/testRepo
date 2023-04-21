@@ -17,8 +17,8 @@ public class ObservationService {
         return observationMapper.findByYearAndMonth(year, month);
     }
 
-    public List<Observation> findAll(){
-        return observationMapper.findAll();
+    public List<Observation> findAfterYearAndMonth(int year, int month){
+        return observationMapper.findAllAfterYearAndMonth(year, month);
     }
 
 }

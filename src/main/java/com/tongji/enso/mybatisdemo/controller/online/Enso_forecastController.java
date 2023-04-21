@@ -1,11 +1,10 @@
 package com.tongji.enso.mybatisdemo.controller.online;
 
 import com.tongji.enso.mybatisdemo.entity.online.Enso_forecast;
-import com.tongji.enso.mybatisdemo.entity.online.Enso_result;
 import com.tongji.enso.mybatisdemo.entity.online.Observation;
+import com.tongji.enso.mybatisdemo.entity.online.YM;
 import com.tongji.enso.mybatisdemo.service.online.Enso_forecastService;
 import com.tongji.enso.mybatisdemo.service.online.ObservationService;
-import com.tongji.enso.mybatisdemo.service.online.Enso_resultService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.text.DecimalFormat;
 import java.util.*;
 
 /**
@@ -37,10 +37,12 @@ public class Enso_forecastController {
      */
     //String2arr
     public ArrayList<Double> myString2Arr(String str){
+        DecimalFormat df = new DecimalFormat("0.00");
         String[] str_p = str.split(" ");
         ArrayList<Double> arr = new ArrayList<>();
         for (String s : str_p) {
-            arr.add(Double.parseDouble(s));
+            Double d = Double.parseDouble(s);
+            arr.add(Double.valueOf(df.format(d)));
         }
         return arr;
     }
@@ -99,7 +101,7 @@ public class Enso_forecastController {
 
         //数据准备
         List<Enso_forecast> efs = enso_forecastService.findAllByYearAndMonth(year, month);
-        List<Observation> obs = observationService.findAll();
+        List<Observation> obs = observationService.findAfterYearAndMonth(year, month);
         int len = obs.size();
         //System.out.println();
         HashMap<String, Object> return_HashMap = new HashMap<String, Object>();
@@ -137,6 +139,69 @@ public class Enso_forecastController {
         return return_HashMap;
     }
 
+
+
+    /**
+     * 主页面;
+     * 参数：年月year and month
+     */
+    @GetMapping("/mainPage_new")
+    @ApiOperation(value = "主页面：模型预报对比", notes = "模型预报对比")
+    public HashMap<String, Object> mainPage_new(){
+
+        //数据准备
+        int year=2023;
+        int month=2;
+        List<Enso_forecast> efs = enso_forecastService.findAllAfterYearAndMonth(year, month);
+        List<YM> yms = enso_forecastService.findDisYM(year, month);
+        HashMap<String, Object> return_HashMap = new HashMap<String, Object>();
+        ArrayList<String> availableMonth = new ArrayList<String>();
+        HashMap<String, Object> data_Hashmap = new HashMap<String, Object>();
+
+        for (YM ym:yms){
+            HashMap<String, Object> ym_HashMap = new HashMap<String, Object>();
+            int y = ym.getYear();
+            int m = ym.getMonth();
+            int len_max = myString2Arr(efs.get(0).getResult()).size();
+            for (int k = 0;k<efs.size();k++){
+                if (myString2Arr(efs.get(k).getResult()).size() > len_max){
+                    len_max = myString2Arr(efs.get(k).getResult()).size();
+                }
+            }
+
+            //series
+            ArrayList<HashMap<String, Object>> series = new ArrayList<HashMap<String, Object>>();
+            for (Enso_forecast efi:efs){
+                if (efi.getYear() == y && efi.getMonth() == m){
+                    HashMap<String, Object> series_i = new HashMap<String, Object>();
+                    series_i.put("name", efi.getModel());
+                    series_i.put("type","line");
+                    series_i.put("data", myString2Arr(efi.getResult()));
+                    series.add(series_i);
+                }
+            }
+            ym_HashMap.put("series",series);
+            //准备axis
+            HashMap<String, Object> xHashMap = new HashMap<String, Object>();
+            xHashMap.put("data", getDateList(y,m,len_max));
+            ym_HashMap.put("xAxis", xHashMap);
+
+            String ym_title = "";
+            if (m<10){
+                ym_title = ""+y+"-0"+m;
+            } else {
+                ym_title = ""+y+"-"+m;
+            }
+
+            availableMonth.add(ym_title);
+            data_Hashmap.put(ym_title, ym_HashMap);
+        }
+        return_HashMap.put("availableMonth", availableMonth);
+        return_HashMap.put("data", data_Hashmap);
+
+        return return_HashMap;
+    }
+
     /**
      * 分析页面char 1;
      * 参数：模型类型 目前为ef ensemble forecast
@@ -147,7 +212,7 @@ public class Enso_forecastController {
 
         //数据准备
         List<Enso_forecast> efs = enso_forecastService.findAllByModel(model);
-        List<Observation> obs = observationService.findAll();
+        List<Observation> obs = observationService.findAfterYearAndMonth(2022, 2);
         int len = obs.size();
         int y = obs.get(0).getYear();
         int m = obs.get(0).getMonth();
@@ -257,7 +322,7 @@ public class Enso_forecastController {
 
         //数据准备
         List<Enso_forecast> efs = enso_forecastService.findAllByModel(model);
-        List<Observation> obs = observationService.findAll();
+        List<Observation> obs = observationService.findAfterYearAndMonth(2022, 2);
         int len = obs.size();
         int y = obs.get(0).getYear();
         int m = obs.get(0).getMonth();
@@ -370,7 +435,7 @@ public class Enso_forecastController {
 
         //数据准备
         List<Enso_forecast> efs = enso_forecastService.findAllByModel(model);
-        List<Observation> obs = observationService.findAll();
+        List<Observation> obs = observationService.findAfterYearAndMonth(2022, 2);
         int len = obs.size();
         int y0 = obs.get(0).getYear();
         int m0 = obs.get(0).getMonth();
@@ -470,7 +535,7 @@ public class Enso_forecastController {
 
         //数据准备
         List<Enso_forecast> efs = enso_forecastService.findAllByModel(model);
-        List<Observation> obs = observationService.findAll();
+        List<Observation> obs = observationService.findAfterYearAndMonth(2022, 2);
         int len = obs.size();
         //System.out.println();
         HashMap<String, Object> return_HashMap = new HashMap<String, Object>();
